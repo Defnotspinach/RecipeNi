@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Heart, Clock, User } from 'lucide-react'
 import { Recipe } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
+import { resolveImageUrl } from '../../lib/utils'
 
 interface RecipeCardProps {
   recipe: Recipe
@@ -28,7 +29,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     <Link to={`/recipe/${recipe.id}`} className="group flex flex-col bg-card rounded-xl overflow-hidden border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img 
-          src={recipe.imageUrl} 
+          src={resolveImageUrl(recipe.imageUrl)} 
           alt={recipe.title}
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
         />

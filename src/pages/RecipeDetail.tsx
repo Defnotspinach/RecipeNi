@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Heart, Clock, Users, ChefHat, ArrowLeft, Play } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import CookingMode from '../components/recipe/CookingMode'
+import { resolveImageUrl } from '../lib/utils'
 
 export default function RecipeDetail() {
   const { id } = useParams()
@@ -37,7 +38,7 @@ export default function RecipeDetail() {
     <article className="pb-20">
       {/* Recipe Hero */}
       <div className="relative w-full h-[40vh] md:h-[50vh] bg-muted">
-        <img src={recipe.imageUrl} alt={recipe.title} className="w-full h-full object-cover" />
+        <img src={resolveImageUrl(recipe.imageUrl)} alt={recipe.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
         
         <div className="absolute top-4 left-4 z-10">

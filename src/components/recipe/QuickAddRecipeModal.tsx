@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { useAppStore } from '../../store/useAppStore';
 import { Recipe } from '../../types';
@@ -200,50 +201,51 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-center items-center p-0 md:px-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end md:justify-center items-center p-0 md:p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className={`w-full max-w-4xl bg-card border-x border-t rounded-t-2xl shadow-2xl flex flex-col h-[95vh] overflow-y-auto relative transition-all ${isDraggingFile ? 'ring-4 ring-primary border-primary scale-[1.01]' : ''
+        className={`w-full max-w-4xl bg-card border rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh] overflow-hidden relative transition-all ${isDraggingFile ? 'ring-4 ring-primary border-primary scale-[1.01]' : ''
           }`}
+        onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b shrink-0 bg-muted/30">
+        <div className="flex items-center justify-between p-4 border-b shrink-0 bg-muted/30">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Wand2 className="h-6 w-6 text-primary" />
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Wand2 className="h-5 w-5 text-primary" />
               Quick Add Recipe
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Drag & drop a photo, or drag a text/Notes file to auto-fill sections!
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted rounded-full transition-colors"
+            className="p-1.5 hover:bg-muted rounded-full transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Form Body - scrollable area */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto min-h-0 p-4 custom-scrollbar">
 
           {isDraggingFile && (
             <div className="absolute inset-0 z-10 bg-primary/10 backdrop-blur-sm flex flex-col items-center justify-center border-4 border-dashed border-primary rounded-2xl m-2">
-              <UploadCloud className="h-16 w-16 text-primary mb-4 animate-bounce" />
-              <h3 className="text-2xl font-bold text-primary">Drop it like it's hot!</h3>
-              <p className="text-primary/80 font-medium">Drop an image or text file to parse</p>
+              <UploadCloud className="h-14 w-14 text-primary mb-3 animate-bounce" />
+              <h3 className="text-xl font-bold text-primary">Drop it like hot!</h3>
+              <p className="text-primary/80 font-medium text-sm">Drop an image or text file</p>
             </div>
           )}
 
-          <form id="quick-add-form" onSubmit={handleSubmit} className="space-y-6">
+          <form id="quick-add-form" onSubmit={handleSubmit} className="space-y-4">
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
               {/* Left Column: Image & Details */}
-              <div className="lg:col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-4">
 
                 {/* Image Upload Area */}
                 <div className="space-y-2">
@@ -283,10 +285,10 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
                   />
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-semibold mb-1">Category</label>
-                    <select name="category" value={formData.category} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 bg-muted/50 outline-none focus:ring-2 focus:ring-primary/50 text-sm">
+                    <label className="block text-xs font-semibold mb-1">Category</label>
+                    <select name="category" value={formData.category} onChange={handleChange} className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 outline-none focus:ring-2 focus:ring-primary/50 text-sm">
                       <option value="Main">Main Course</option>
                       <option value="Soup">Soup</option>
                       <option value="Noodles">Noodles</option>
@@ -297,21 +299,21 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-muted-foreground">Prep (m)</label>
-                      <input type="number" name="prepTime" value={formData.prepTime} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 bg-muted/50 text-sm" />
+                      <input type="number" name="prepTime" value={formData.prepTime} onChange={handleChange} className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-muted-foreground">Cook (m)</label>
-                      <input type="number" name="cookTime" value={formData.cookTime} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 bg-muted/50 text-sm" />
+                      <input type="number" name="cookTime" value={formData.cookTime} onChange={handleChange} className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 text-sm" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-muted-foreground">Serves</label>
-                      <input type="number" name="servings" value={formData.servings} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 bg-muted/50 text-sm" />
+                      <input type="number" name="servings" value={formData.servings} onChange={handleChange} className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 text-sm" />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold mb-1 text-muted-foreground">Difficulty</label>
-                      <select name="difficulty" value={formData.difficulty} onChange={handleChange} className="w-full border rounded-lg px-2 py-2 bg-muted/50 text-sm">
+                      <select name="difficulty" value={formData.difficulty} onChange={handleChange} className="w-full border rounded-lg px-2 py-1.5 bg-muted/50 text-sm">
                         <option value="Easy">Easy</option>
                         <option value="Medium">Medium</option>
                         <option value="Hard">Hard</option>
@@ -322,56 +324,56 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
               </div>
 
               {/* Right Column: Text Content */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="lg:col-span-2 space-y-3">
                 <div>
-                  <label className="block text-sm font-semibold mb-1 text-foreground">Recipe Title</label>
+                  <label className="block text-xs font-semibold mb-1 text-foreground">Recipe Title</label>
                   <input
                     required
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2.5 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium"
+                    className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none transition-all font-medium text-sm"
                     placeholder="e.g. Lola's Signature Adobo"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-1 text-foreground">Description</label>
+                  <label className="block text-xs font-semibold mb-1 text-foreground">Description</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full border rounded-lg px-3 py-2 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-sm resize-none"
+                    className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-sm resize-none"
                     placeholder="A quick summary..."
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
-                      <FileText className="h-4 w-4 text-muted-foreground" /> Ingredients
+                    <label className="block text-xs font-semibold mb-1 flex items-center gap-1">
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Ingredients
                     </label>
                     <textarea
                       required
                       name="ingredientsText"
                       value={formData.ingredientsText}
                       onChange={handleChange}
-                      rows={8}
-                      className="w-full border rounded-lg px-3 py-2 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-sm font-mono whitespace-pre-wrap resize-none"
+                      rows={7}
+                      className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-xs font-mono whitespace-pre-wrap resize-none"
                       placeholder="1 cup rice&#10;2 cups water..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-1 flex items-center gap-1">
-                      <FileText className="h-4 w-4 text-muted-foreground" /> Instructions
+                    <label className="block text-xs font-semibold mb-1 flex items-center gap-1">
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Instructions
                     </label>
                     <textarea
                       required
                       name="stepsText"
                       value={formData.stepsText}
                       onChange={handleChange}
-                      rows={8}
-                      className="w-full border rounded-lg px-3 py-2 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-sm font-mono whitespace-pre-wrap resize-none"
+                      rows={7}
+                      className="w-full border rounded-lg px-2.5 py-1.5 bg-muted/50 focus:bg-background focus:ring-2 focus:ring-primary/50 outline-none text-xs font-mono whitespace-pre-wrap resize-none"
                       placeholder="Wash the rice...&#10;Cook for 20 mins..."
                     />
                   </div>
@@ -379,7 +381,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
 
                 {/* Note Drop Zone */}
                 <div
-                  className="w-full border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors text-center relative overflow-hidden group mt-2"
+                  className="w-full border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors text-center relative overflow-hidden group mt-2"
                 >
                   <input
                     type="file"
@@ -398,13 +400,13 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
                       }
                     }}
                   />
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full group-hover:scale-110 transition-transform">
-                      <FileText className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="bg-primary/10 p-3 rounded-full group-hover:scale-110 transition-transform">
+                      <FileText className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-primary">Upload a Recipe Note (.txt)</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">We'll auto-extract the Title, Ingredients & Instructions!</p>
+                    <div className="text-center">
+                      <p className="text-base font-bold text-primary">Upload a Recipe Note (.txt)</p>
+                      <p className="text-sm text-muted-foreground mt-1">We'll auto-extract the Title, Ingredients & Instructions!</p>
                     </div>
                   </div>
                 </div>
@@ -415,11 +417,11 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-muted/10 shrink-0 flex justify-end gap-3 mt-auto">
+        <div className="p-3 border-t bg-muted/10 shrink-0 flex justify-end gap-3 mt-auto">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-lg font-medium hover:bg-muted transition-colors"
+            className="px-4 py-2 rounded-lg font-medium hover:bg-muted transition-colors text-sm"
           >
             Cancel
           </button>
@@ -427,7 +429,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
             form="quick-add-form"
             type="submit"
             disabled={!isValid || isUploading}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold transition-all shadow-sm
+            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-bold transition-all shadow-sm text-sm
               ${(isValid && !isUploading)
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                 : 'bg-muted text-muted-foreground cursor-not-allowed border'
@@ -435,12 +437,12 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="h-5 w-5" />
+                <Save className="h-4 w-4" />
                 Save Recipe
               </>
             )}
@@ -449,4 +451,6 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChefHat, Eye, EyeOff, Facebook } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { resolveImageUrl } from '../lib/utils'
+import { useAppStore } from '../store/useAppStore'
 
 const AUTH_SHOWCASE_SLIDES = [
   {
@@ -56,6 +57,7 @@ export default function Auth() {
   
   const navigate = useNavigate()
   const currentSlide = AUTH_SHOWCASE_SLIDES[showcaseIndex]
+  const setToast = useAppStore(state => state.setToast)
 
   useEffect(() => {
     const slideTimer = setInterval(() => {
@@ -103,7 +105,7 @@ export default function Auth() {
           }
         })
         if (error) throw error
-        alert("Sign up successful! Please log in now.")
+        setToast({ message: "Sign up successful! Please log in now.", type: 'success' })
         setIsLogin(true)
       }
     } catch (err: any) {

@@ -1,6 +1,6 @@
 import { useAppStore } from '../../store/useAppStore'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, X, LogIn } from 'lucide-react'
+import { X, LogIn } from 'lucide-react'
 
 export default function LoginPromptModal() {
   const { isLoginPromptOpen, setLoginPromptOpen } = useAppStore()

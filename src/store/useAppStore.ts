@@ -10,9 +10,13 @@ interface AppState {
   favorites: string[] // Array of recipe IDs
   theme: 'light' | 'dark'
   isSupabaseSeeded: boolean
+  isLoginPromptOpen: boolean
+  toast: { message: string, type: 'success' | 'error' | 'info' } | null
   
   // Actions
   setUser: (user: User | null) => void
+  setLoginPromptOpen: (open: boolean) => void
+  setToast: (toast: { message: string, type: 'success' | 'error' | 'info' } | null) => void
   fetchRecipes: () => Promise<void>
   fetchFavorites: (userId: string) => Promise<void>
   addRecipe: (recipe: Recipe) => Promise<void>
@@ -30,8 +34,12 @@ export const useAppStore = create<AppState>()(
       favorites: [],
       theme: 'light',
       isSupabaseSeeded: false,
+      isLoginPromptOpen: false,
+      toast: null,
       
       setUser: (user) => set({ user }),
+      setLoginPromptOpen: (open) => set({ isLoginPromptOpen: open }),
+      setToast: (toast) => set({ toast }),
 
       fetchRecipes: async () => {
         const { data, error } = await supabase.from('recipes').select('*').order('createdAt', { ascending: false })
@@ -70,10 +78,10 @@ export const useAppStore = create<AppState>()(
         if (error) {
           console.error('Error adding recipe:', error)
           if (error.code === 'PGRST205') {
-            alert('Missing Supabase table: public.recipes. Run supabase/init.sql in SQL Editor first.')
+            get().setToast({ message: 'Missing Supabase table: public.recipes. Run supabase/init.sql', type: 'error' })
             return
           }
-          alert("Failed to submit recipe. Are you authenticated?")
+          get().setToast({ message: "Failed to submit recipe. Are you authenticated?", type: 'error' })
           return
         }
         // Optimistic UI update
@@ -119,7 +127,7 @@ export const useAppStore = create<AppState>()(
         if (error) {
           console.error('Error seeding data:', error)
           if (error.code === 'PGRST205') {
-            alert('Missing Supabase table: public.recipes. Run supabase/init.sql in SQL Editor first.')
+            get().setToast({ message: 'Missing Supabase table: public.recipes. Run supabase/init.sql', type: 'error' })
           }
           return
         }
@@ -141,9 +149,9 @@ export const useAppStore = create<AppState>()(
         
         if (success) {
           get().fetchRecipes();
-          alert('Successfully updated all recipe photos to your local images!');
+          get().setToast({ message: 'Successfully updated all recipe photos!', type: 'success' });
         } else {
-          alert('There was an error updating some photos.');
+          get().setToast({ message: 'There was an error updating some photos.', type: 'error' });
         }
       }
     }),

@@ -11,6 +11,8 @@ import RecipeDetail from './pages/RecipeDetail'
 import Dashboard from './pages/Dashboard'
 import SubmitRecipe from './pages/SubmitRecipe'
 import Auth from './pages/Auth'
+import LoginPromptModal from './components/ui/LoginPromptModal'
+import GlobalToast from './components/ui/GlobalToast'
 
 function App() {
   const theme = useAppStore(state => state.theme)
@@ -70,6 +72,8 @@ function App() {
     <>
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       <Router>
+        <LoginPromptModal />
+        <GlobalToast />
         <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1">

@@ -16,6 +16,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault() // prevent navigation if wrapped in Link
+    e.stopPropagation() // prevent triggering the card's onClick
     if (!user) {
       setLoginPromptOpen(true)
       return
@@ -25,8 +26,19 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     setTimeout(() => setIsAnimating(false), 400)
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault()
+      setLoginPromptOpen(true)
+    }
+  }
+
   return (
-    <Link to={`/recipe/${recipe.id}`} className="group flex flex-col bg-card rounded-xl overflow-hidden border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300">
+    <Link 
+      to={`/recipe/${recipe.id}`} 
+      onClick={handleCardClick}
+      className="group flex flex-col bg-card rounded-xl overflow-hidden border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300"
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img 
           src={resolveImageUrl(recipe.imageUrl)} 

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChefHat, Eye, EyeOff, Facebook } from 'lucide-react'
+import { Eye, EyeOff, Facebook } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { resolveImageUrl } from '../lib/utils'
 import { useAppStore } from '../store/useAppStore'
+
+const REMEMBERED_EMAIL_KEY = 'recipeni.rememberedEmail'
 
 const AUTH_SHOWCASE_SLIDES = [
   {
@@ -49,11 +51,11 @@ export default function Auth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showcaseIndex, setShowcaseIndex] = useState(0)
-  const [typedHeadline, setTypedHeadline] = useState('')
   
   const navigate = useNavigate()
   const currentSlide = AUTH_SHOWCASE_SLIDES[showcaseIndex]
@@ -68,20 +70,23 @@ export default function Auth() {
   }, [])
 
   useEffect(() => {
-    setTypedHeadline('')
-    const text = currentSlide.headline
-    let i = 0
+    const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY)
+    if (rememberedEmail) {
+      setEmail(rememberedEmail)
+      setRememberMe(true)
+    }
+  }, [])
 
-    const typeTimer = setInterval(() => {
-      i += 1
-      setTypedHeadline(text.slice(0, i))
-      if (i >= text.length) {
-        clearInterval(typeTimer)
-      }
-    }, 35)
+  useEffect(() => {
+    if (!isLogin) return
 
-    return () => clearInterval(typeTimer)
-  }, [currentSlide.headline])
+    if (rememberMe && email.trim()) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim())
+      return
+    }
+
+    localStorage.removeItem(REMEMBERED_EMAIL_KEY)
+  }, [email, rememberMe, isLogin])
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,6 +100,13 @@ export default function Auth() {
           password
         })
         if (error) throw error
+
+        if (rememberMe && email.trim()) {
+          localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim())
+        } else {
+          localStorage.removeItem(REMEMBERED_EMAIL_KEY)
+        }
+
         navigate('/') 
       } else {
         const { error } = await supabase.auth.signUp({
@@ -120,14 +132,6 @@ export default function Auth() {
       
       {/* Left Form Section */}
       <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-12 lg:px-20 xl:px-28 bg-background relative z-10 overflow-hidden py-4">
-        
-        {/* Brand Logo */}
-        <div className="absolute top-8 left-8 md:left-16 lg:left-24 xl:left-32 flex items-center gap-2">
-          <div className="bg-primary text-primary-foreground p-1.5 rounded-md">
-            <ChefHat className="h-5 w-5" />
-          </div>
-          <span className="font-bold text-xl tracking-tight">RecipeNi</span>
-        </div>
 
         <div className="w-full flex justify-center">
           <div key={isLogin ? 'auth-login' : 'auth-signup'} className="max-w-md w-full mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -205,8 +209,13 @@ export default function Auth() {
             {isLogin && (
               <div className="flex items-center justify-between pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-muted text-primary focus:ring-primary h-4 w-4 accent-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">Save account</span>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-muted text-primary focus:ring-primary h-4 w-4 accent-primary"
+                  />
+                  <span className="text-sm font-medium text-muted-foreground">Remember me</span>
                 </label>
                 <button type="button" className="text-sm font-bold text-foreground hover:text-primary transition-colors hover:underline">
                   Forgot Password?
@@ -315,7 +324,7 @@ export default function Auth() {
 
           <div className="mt-12 text-center text-primary-foreground">
             <h2 className="text-3xl font-bold mb-4 tracking-tight min-h-[2.5rem]">
-              <span className="typing-caret">{typedHeadline}</span>
+              {currentSlide.headline}
             </h2>
             <p className="text-primary-foreground/80 leading-relaxed text-lg">
               {currentSlide.description}

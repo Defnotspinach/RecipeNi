@@ -4,7 +4,7 @@ import { useAppStore } from '../store/useAppStore'
 import RecipeGrid from '../components/recipe/RecipeGrid'
 
 export default function Explore() {
-  const recipes = useAppStore(state => state.recipes)
+  const { user, recipes } = useAppStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
@@ -21,6 +21,16 @@ export default function Explore() {
       return matchesSearch && matchesCategory
     })
   }, [recipes, searchQuery, selectedCategory])
+
+  const userRecipes = useMemo(() => {
+    if (!user) return []
+    return filteredRecipes.filter(r => r.authorId === user.id)
+  }, [filteredRecipes, user])
+
+  const otherRecipes = useMemo(() => {
+    if (!user) return filteredRecipes
+    return filteredRecipes.filter(r => r.authorId !== user.id)
+  }, [filteredRecipes, user])
 
   return (
     <div className="container mx-auto px-4 py-12 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-both">
@@ -70,7 +80,29 @@ export default function Explore() {
         </div>
       </div>
 
-      <RecipeGrid recipes={filteredRecipes} />
+      {user && (
+        <div className="mb-16">
+          <div className="flex items-center gap-2 mb-6 border-b pb-2">
+            <h2 className="text-2xl font-bold">Your Recipes</h2>
+          </div>
+          <RecipeGrid 
+            recipes={userRecipes} 
+            emptyMessage="You haven't submitted any recipes matching this search." 
+          />
+        </div>
+      )}
+
+      <div>
+        <div className="flex items-center gap-2 mb-6 border-b pb-2">
+          <h2 className="text-2xl font-bold">
+            {user ? 'Community Recipes' : 'All Recipes'}
+          </h2>
+        </div>
+        <RecipeGrid 
+          recipes={otherRecipes} 
+          emptyMessage="No community recipes found matching your criteria."
+        />
+      </div>
     </div>
   )
 }

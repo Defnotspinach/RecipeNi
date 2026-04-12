@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { BookOpen, Heart } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import RecipeGrid from '../components/recipe/RecipeGrid'
+import QuickAddRecipeModal from '../components/recipe/QuickAddRecipeModal'
+import { Plus } from 'lucide-react'
 
 export default function Dashboard() {
   const { user, recipes, favorites } = useAppStore()
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
 
   if (!user) {
     return <Navigate to="/" replace />
@@ -33,9 +37,18 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <div className="flex items-center gap-2 mb-6 border-b pb-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold">My Recipes</h2>
+          <div className="flex items-center justify-between mb-6 border-b pb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold">My Recipes</h2>
+            </div>
+            <button
+              onClick={() => setIsQuickAddOpen(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Recipe</span>
+            </button>
           </div>
           <RecipeGrid 
             recipes={userRecipes} 
@@ -43,6 +56,11 @@ export default function Dashboard() {
           />
         </section>
       </div>
+
+      <QuickAddRecipeModal 
+        isOpen={isQuickAddOpen} 
+        onClose={() => setIsQuickAddOpen(false)} 
+      />
     </div>
   )
 }

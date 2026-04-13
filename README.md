@@ -42,7 +42,8 @@ RecipeNi is a modern, full-stack web application designed to be a community-driv
 <img width="1858" height="911" alt="image" src="https://github.com/user-attachments/assets/1132307d-bece-45f5-b5d2-6f20cddb4efd" />
 
 ### Submit Recipe Page
-*(Your Screenshot Here)*
+<img width="1860" height="909" alt="image" src="https://github.com/user-attachments/assets/80ce61b6-675a-4d51-b70e-32e7c429790a" />
+
 
 ##  Tech Stack
 

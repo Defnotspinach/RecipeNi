@@ -11,7 +11,7 @@ interface QuickAddRecipeModalProps {
 }
 
 export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeModalProps) {
-  const { user, addRecipe, showToast } = useAppStore();
+  const { user, addRecipe, setToast } = useAppStore();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -52,7 +52,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
 
   if (!isOpen || !user) return null;
 
-  const isValid = formData.title && formData.ingredientsText && formData.stepsText && imagePreview;
+  const isValid = formData.title && formData.ingredientsText && formData.stepsText;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -106,7 +106,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
       stepsText: instructions.trim() || prev.stepsText
     }));
 
-    showToast('Auto-filled sections from note!', 'success');
+    setToast({ message: 'Auto-filled sections from note!', type: 'success' });
   };
 
   const bulletsToText = (line: string, appender: (val: string) => void) => {
@@ -141,7 +141,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
         };
         reader.readAsText(file);
       } else {
-        showToast('Unsupported file type. Please drop an image or text file.', 'error');
+        setToast({ message: 'Unsupported file type. Please drop an image or text file.', type: 'error' });
       }
     } else {
       const text = e.dataTransfer.getData('text/plain');
@@ -167,7 +167,7 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
         .upload(fileName, imageFile);
 
       if (uploadError) {
-        showToast('Failed to upload image. Using default.', 'error');
+        setToast({ message: 'Failed to upload image. Using default.', type: 'error' });
       } else {
         const { data: { publicUrl } } = supabase.storage
           .from('recipes')
@@ -195,9 +195,12 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
       createdAt: new Date().toISOString()
     };
 
-    await addRecipe(newRecipe);
+    const saved = await addRecipe(newRecipe);
     setIsUploading(false);
-    showToast('Recipe added successfully!', 'success');
+
+    if (!saved) return;
+
+    setToast({ message: 'Recipe added successfully!', type: 'success' });
     onClose();
   };
 

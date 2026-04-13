@@ -87,6 +87,7 @@ export default function Explore() {
           </div>
           <RecipeGrid 
             recipes={userRecipes} 
+            allowDelete
             emptyMessage="You haven't submitted any recipes matching this search." 
           />
         </div>

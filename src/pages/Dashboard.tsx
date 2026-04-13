@@ -52,6 +52,7 @@ export default function Dashboard() {
           </div>
           <RecipeGrid 
             recipes={userRecipes} 
+            allowDelete
             emptyMessage="You haven't submitted any recipes. Share your family's favorite dish!" 
           />
         </section>

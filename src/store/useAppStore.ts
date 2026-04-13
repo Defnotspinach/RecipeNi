@@ -19,7 +19,8 @@ interface AppState {
   setToast: (toast: { message: string, type: 'success' | 'error' | 'info' } | null) => void
   fetchRecipes: () => Promise<void>
   fetchFavorites: (userId: string) => Promise<void>
-  addRecipe: (recipe: Recipe) => Promise<void>
+  addRecipe: (recipe: Recipe) => Promise<boolean>
+  deleteRecipe: (recipeId: string) => Promise<boolean>
   toggleFavorite: (recipeId: string) => Promise<void>
   toggleTheme: () => void
   seedDatabase: () => Promise<void>
@@ -79,13 +80,45 @@ export const useAppStore = create<AppState>()(
           console.error('Error adding recipe:', error)
           if (error.code === 'PGRST205') {
             get().setToast({ message: 'Missing Supabase table: public.recipes. Run supabase/init.sql', type: 'error' })
-            return
+            return false
           }
           get().setToast({ message: "Failed to submit recipe. Are you authenticated?", type: 'error' })
-          return
+          return false
         }
         // Optimistic UI update
         set((state) => ({ recipes: [recipe, ...state.recipes] }))
+        return true
+      },
+
+      deleteRecipe: async (recipeId) => {
+        const state = get()
+        if (!state.user) {
+          get().setToast({ message: 'Please log in to delete recipes.', type: 'error' })
+          return false
+        }
+
+        const { data, error } = await supabase
+          .from('recipes')
+          .delete()
+          .match({ id: recipeId, authorId: state.user.id })
+          .select('id')
+
+        if (error) {
+          console.error('Error deleting recipe:', error)
+          get().setToast({ message: 'Failed to delete recipe.', type: 'error' })
+          return false
+        }
+
+        if (!data || data.length === 0) {
+          get().setToast({ message: 'Recipe not found or you are not allowed to delete it.', type: 'error' })
+          return false
+        }
+
+        set((prev) => ({
+          recipes: prev.recipes.filter((recipe) => recipe.id !== recipeId),
+          favorites: prev.favorites.filter((id) => id !== recipeId),
+        }))
+        return true
       },
 
       toggleFavorite: async (recipeId) => {

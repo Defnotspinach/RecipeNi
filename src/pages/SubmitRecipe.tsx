@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { Recipe } from '../types'
 
 export default function SubmitRecipe() {
-  const { user, addRecipe, showToast } = useAppStore()
+  const { user, addRecipe, setToast } = useAppStore()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -26,7 +26,7 @@ export default function SubmitRecipe() {
   const [isUploading, setIsUploading] = useState(false)
 
   // Basic validation check to enable/disable submit button
-  const isValid = formData.title && formData.description && formData.ingredientsText && formData.stepsText && (imagePreview !== null)
+  const isValid = formData.title && formData.description && formData.ingredientsText && formData.stepsText
 
   if (!user) {
     return <Navigate to="/" replace />
@@ -69,7 +69,7 @@ export default function SubmitRecipe() {
 
       if (uploadError) {
         console.error('Error uploading image:', uploadError)
-        showToast('Failed to upload the image. Please verify your purely public bucket "recipes" exists.', 'error')
+        setToast({ message: 'Failed to upload the image. Please verify your public bucket "recipes" exists.', type: 'error' })
         setIsUploading(false)
         return
       }
@@ -101,8 +101,12 @@ export default function SubmitRecipe() {
       createdAt: new Date().toISOString()
     }
 
-    await addRecipe(newRecipe)
+    const saved = await addRecipe(newRecipe)
     setIsUploading(false)
+
+    if (!saved) return
+
+    setToast({ message: 'Recipe added successfully!', type: 'success' })
     navigate('/dashboard')
   }
 

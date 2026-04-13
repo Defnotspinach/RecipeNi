@@ -1,18 +1,23 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, Clock, User } from 'lucide-react'
+import { Heart, Clock, User, Trash2 } from 'lucide-react'
 import { Recipe } from '../../types'
 import { useAppStore } from '../../store/useAppStore'
 import { resolveImageUrl } from '../../lib/utils'
+import ConfirmDeleteModal from '../ui/ConfirmDeleteModal'
 
 interface RecipeCardProps {
   recipe: Recipe
+  allowDelete?: boolean
 }
 
-export default function RecipeCard({ recipe }: RecipeCardProps) {
-  const { user, favorites, toggleFavorite, setLoginPromptOpen } = useAppStore()
+export default function RecipeCard({ recipe, allowDelete = false }: RecipeCardProps) {
+  const { user, favorites, toggleFavorite, deleteRecipe, setToast, setLoginPromptOpen } = useAppStore()
   const isFavorite = favorites.includes(recipe.id)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const canDelete = allowDelete && !!user && recipe.authorId === user.id
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault() // prevent navigation if wrapped in Link
@@ -30,6 +35,27 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     if (!user) {
       e.preventDefault()
       setLoginPromptOpen(true)
+    }
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!canDelete || isDeleting) return
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    const deleted = await deleteRecipe(recipe.id)
+    setIsDeleting(false)
+
+    if (deleted) {
+      setShowDeleteModal(false)
+      setToast({ message: 'Recipe deleted successfully.', type: 'success' })
+    } else {
+      setShowDeleteModal(false)
     }
   }
 
@@ -52,6 +78,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         >
           <Heart className={`h-4 w-4 transition-transform duration-300 ${isAnimating ? 'animate-pop' : 'hover:scale-110'} ${isFavorite ? "fill-destructive stroke-destructive" : "stroke-foreground"}`} />
         </button>
+        {canDelete && (
+          <button
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            className="absolute top-3 left-3 p-2 rounded-full bg-background/85 hover:bg-background backdrop-blur-sm text-destructive transition-colors shadow-sm disabled:opacity-60"
+            aria-label="Delete recipe"
+            title="Delete recipe"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start gap-2 mb-2">
@@ -71,6 +108,13 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </div>
         </div>
       </div>
+      <ConfirmDeleteModal 
+        isOpen={showDeleteModal}
+        isDeleting={isDeleting}
+        recipeTitle={recipe.title}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </Link>
   )
 }

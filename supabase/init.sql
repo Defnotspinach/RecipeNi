@@ -117,6 +117,13 @@ create policy "recipes_update_owner"
   using (auth.uid()::text = "authorId")
   with check (auth.uid()::text = "authorId");
 
+drop policy if exists "recipes_delete_owner" on public.recipes;
+create policy "recipes_delete_owner"
+  on public.recipes
+  for delete
+  to authenticated
+  using (auth.uid()::text = "authorId");
+
 -- Favorites are user-scoped.
 drop policy if exists "favorites_select_own" on public.favorites;
 create policy "favorites_select_own"

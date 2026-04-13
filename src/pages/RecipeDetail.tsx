@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { Heart, Clock, Users, ChefHat, ArrowLeft, Play } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { Heart, Clock, Users, ChefHat, ArrowLeft, Play, Trash2 } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import CookingMode from '../components/recipe/CookingMode'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import { resolveImageUrl } from '../lib/utils'
 
 export default function RecipeDetail() {
   const { id } = useParams()
-  const { recipes, user, favorites, toggleFavorite, setLoginPromptOpen } = useAppStore()
+  const { recipes, user, favorites, toggleFavorite, deleteRecipe, setToast, setLoginPromptOpen } = useAppStore()
+  const navigate = useNavigate()
   const [isCooking, setIsCooking] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   
   const recipe = recipes.find(r => r.id === id)
   
@@ -23,6 +27,7 @@ export default function RecipeDetail() {
   }
 
   const isFavorite = favorites.includes(recipe.id)
+  const isOwner = !!user && recipe.authorId === user.id
 
   const handleFavoriteClick = () => {
     if (!user) {
@@ -32,6 +37,27 @@ export default function RecipeDetail() {
     toggleFavorite(recipe.id)
     setIsAnimating(true)
     setTimeout(() => setIsAnimating(false), 400)
+  }
+
+  const handleDeleteRecipe = () => {
+    if (!isOwner || isDeleting) return
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!recipe) return
+    setIsDeleting(true)
+    const deleted = await deleteRecipe(recipe.id)
+    setIsDeleting(false)
+
+    if (!deleted) {
+      setShowDeleteModal(false)
+      return
+    }
+
+    setShowDeleteModal(false)
+    setToast({ message: 'Recipe deleted successfully.', type: 'success' })
+    navigate('/recipes')
   }
 
   return (
@@ -70,6 +96,17 @@ export default function RecipeDetail() {
               </div>
               
               <div className="ml-auto flex items-center gap-3">
+                {isOwner && (
+                  <button
+                    onClick={handleDeleteRecipe}
+                    disabled={isDeleting}
+                    className="flex items-center justify-center bg-destructive/85 hover:bg-destructive text-destructive-foreground p-2 rounded-lg transition-colors border border-white/10 disabled:opacity-60"
+                    aria-label={isDeleting ? 'Deleting recipe' : 'Delete recipe'}
+                    title={isDeleting ? 'Deleting...' : 'Delete recipe'}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
                 <button 
                   onClick={() => {
                     if (!user) {
@@ -139,6 +176,14 @@ export default function RecipeDetail() {
       {isCooking && (
         <CookingMode recipe={recipe} onClose={() => setIsCooking(false)} />
       )}
+
+      <ConfirmDeleteModal 
+        isOpen={showDeleteModal}
+        isDeleting={isDeleting}
+        recipeTitle={recipe.title}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+      />
     </article>
   )
 }

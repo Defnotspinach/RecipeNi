@@ -6,9 +6,10 @@ import { ChevronLeft, ChevronRight, ChevronsLeft } from 'lucide-react'
 interface RecipeGridProps {
   recipes: Recipe[]
   emptyMessage?: string
+  allowDelete?: boolean
 }
 
-export default function RecipeGrid({ recipes, emptyMessage = "No recipes found." }: RecipeGridProps) {
+export default function RecipeGrid({ recipes, emptyMessage = "No recipes found.", allowDelete = false }: RecipeGridProps) {
   const [currentPage, setCurrentPage] = useState(1)
   
   if (recipes.length === 0) {
@@ -35,7 +36,7 @@ export default function RecipeGrid({ recipes, emptyMessage = "No recipes found."
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {currentRecipes.map(recipe => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
+          <RecipeCard key={recipe.id} recipe={recipe} allowDelete={allowDelete} />
         ))}
       </div>
 

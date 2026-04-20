@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { BookOpen, Clock, ImageIcon, ListChecks, Utensils, ChefHat, Save, UploadCloud, X } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
-import { supabase } from '../lib/supabase'
+import { uploadRecipeImage } from '../lib/uploadRecipeImage'
 import { Recipe } from '../types'
 
 export default function SubmitRecipe() {
@@ -60,26 +60,14 @@ export default function SubmitRecipe() {
 
     // Handle real file upload to Supabase Storage
     if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
-      
-      const { error: uploadError } = await supabase.storage
-        .from('recipes')
-        .upload(fileName, imageFile)
-
-      if (uploadError) {
+      try {
+        finalImageUrl = await uploadRecipeImage(user.id, imageFile)
+      } catch (uploadError: any) {
         console.error('Error uploading image:', uploadError)
-        setToast({ message: 'Failed to upload the image. Please verify your public bucket "recipes" exists.', type: 'error' })
+        setToast({ message: `Failed to upload image: ${uploadError?.message || 'check your Supabase storage policies for bucket "recipes".'}`, type: 'error' })
         setIsUploading(false)
         return
       }
-
-      // Grab the public URL to save to our database
-      const { data: { publicUrl } } = supabase.storage
-        .from('recipes')
-        .getPublicUrl(fileName)
-        
-      finalImageUrl = publicUrl
     }
 
     const newRecipe: Recipe = {

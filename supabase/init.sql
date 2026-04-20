@@ -60,6 +60,11 @@ create table if not exists public.favorites (
   primary key ("userId", "recipeId")
 );
 
+-- Storage bucket for uploaded recipe images.
+insert into storage.buckets (id, name, public)
+values ('recipes', 'recipes', true)
+on conflict (id) do nothing;
+
 alter table public.profiles enable row level security;
 alter table public.recipes enable row level security;
 alter table public.favorites enable row level security;
@@ -145,3 +150,45 @@ create policy "favorites_delete_own"
   for delete
   to authenticated
   using (auth.uid() = "userId");
+
+-- Storage policies for `recipes` bucket.
+drop policy if exists "recipe_images_public_read" on storage.objects;
+create policy "recipe_images_public_read"
+  on storage.objects
+  for select
+  to public
+  using (bucket_id = 'recipes');
+
+drop policy if exists "recipe_images_insert_own_folder" on storage.objects;
+create policy "recipe_images_insert_own_folder"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (
+    bucket_id = 'recipes'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "recipe_images_update_own_folder" on storage.objects;
+create policy "recipe_images_update_own_folder"
+  on storage.objects
+  for update
+  to authenticated
+  using (
+    bucket_id = 'recipes'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'recipes'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "recipe_images_delete_own_folder" on storage.objects;
+create policy "recipe_images_delete_own_folder"
+  on storage.objects
+  for delete
+  to authenticated
+  using (
+    bucket_id = 'recipes'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );

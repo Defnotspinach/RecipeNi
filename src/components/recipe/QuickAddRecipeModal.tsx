@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { supabase } from '../../lib/supabase';
+import { uploadRecipeImage } from '../../lib/uploadRecipeImage';
 import { useAppStore } from '../../store/useAppStore';
 import { Recipe } from '../../types';
 import { X, UploadCloud, FileText, Image as ImageIcon, Save, Loader2, Wand2 } from 'lucide-react';
@@ -159,20 +159,12 @@ export default function QuickAddRecipeModal({ isOpen, onClose }: QuickAddRecipeM
     let finalImageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1000';
 
     if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('recipes')
-        .upload(fileName, imageFile);
-
-      if (uploadError) {
-        setToast({ message: 'Failed to upload image. Using default.', type: 'error' });
-      } else {
-        const { data: { publicUrl } } = supabase.storage
-          .from('recipes')
-          .getPublicUrl(fileName);
-        finalImageUrl = publicUrl;
+      try {
+        finalImageUrl = await uploadRecipeImage(user.id, imageFile);
+      } catch (uploadError: any) {
+        setToast({ message: `Failed to upload image: ${uploadError?.message || 'check storage bucket policies.'}`, type: 'error' });
+        setIsUploading(false);
+        return;
       }
     }
 

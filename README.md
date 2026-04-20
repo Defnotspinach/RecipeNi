@@ -93,8 +93,9 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 4.  **Set up Supabase Storage:**
-    -   In your Supabase project dashboard, go to the `Storage` section.
-    -   Create a new **public** bucket named `recipes`. This is where recipe images will be stored.
+    -   Run [supabase/init.sql](supabase/init.sql) in your Supabase SQL Editor.
+    -   The script now creates the `recipes` storage bucket and required policies for upload/read access.
+    -   If the bucket already exists, the script leaves it unchanged.
 
 5.  **Run the development server:**
     ```sh
